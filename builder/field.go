@@ -55,12 +55,12 @@ func NewSelectorField(name, pkg, fieldType string) *Field {
 	}
 }
 
-func NewStructField(name string, s *Struct) *Field {
+func NewStructField(name string, s *Struct, pkg string) *Field {
 	return &Field{
 		Field: &ast.Field{
 			Names: []*ast.Ident{ast.NewIdent(name)},
 			Type: &ast.SelectorExpr{
-				X:   ast.NewIdent("tttt"),
+				X:   ast.NewIdent(pkg),
 				Sel: ast.NewIdent(s.Name),
 			},
 		},

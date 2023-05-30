@@ -27,8 +27,8 @@ func (s *Struct) AddSelectorField(name, pkg, fieldType string) *Struct {
 }
 
 // AddStructField adds a struct field to the struct.
-func (s *Struct) AddStructField(name string, fieldType *Struct) *Struct {
-	return s.AddField(NewStructField(name, fieldType))
+func (s *Struct) AddStructField(name string, str *Struct, pkg string) *Struct {
+	return s.AddField(NewStructField(name, str, pkg))
 }
 
 // AddStringField adds a string field to the struct.
@@ -78,4 +78,9 @@ func (s *Struct) ToDecl() *ast.GenDecl {
 		Tok:   token.TYPE,
 		Specs: []ast.Spec{s.ToSpec()},
 	}
+}
+
+// String returns the string representation of the struct.
+func (s *Struct) String() string {
+	return s.Name
 }
