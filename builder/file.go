@@ -2,6 +2,7 @@ package builder
 
 import (
 	"go/ast"
+	"go/parser"
 	"go/printer"
 	"go/token"
 	"io"
@@ -15,6 +16,16 @@ func NewFile(pkg string) *File {
 	return &File{File: &ast.File{
 		Name: ast.NewIdent(pkg),
 	}}
+}
+
+// NewFromSource creates a new file from the given source.
+func NewFromSource(src string) (*File, error) {
+	f, err := parser.ParseFile(token.NewFileSet(), "", src, parser.ParseComments)
+	if err != nil {
+		return nil, err
+	}
+
+	return &File{File: f}, nil
 }
 
 // AddStructs adds structs to the file.
@@ -126,4 +137,8 @@ func (f *File) Enums() []*Enum {
 // Print prints the file to the io.Writer.
 func (f *File) Print(w io.Writer) error {
 	return printer.Fprint(w, token.NewFileSet(), f.File)
+}
+
+func (f *File) PackageName() string {
+	return f.Name.Name
 }

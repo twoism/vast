@@ -16,6 +16,13 @@ func NewField(name, fieldType string) *Field {
 	}
 }
 
+// NewFromAstField creates a new field from an ast.Field.
+func NewFromAstField(field *ast.Field) *Field {
+	return &Field{
+		Field: field,
+	}
+}
+
 // NewPointerField creates a new field with the given name and type.
 func NewPointerField(name, fieldType string) *Field {
 	return &Field{
@@ -65,4 +72,25 @@ func NewStructField(name string, s *Struct, pkg string) *Field {
 			},
 		},
 	}
+}
+
+// FieldsFromAstFields creates a slice of fields from a slice of ast.Fields.
+func FieldsFromAstFields(fields []*ast.Field) []*Field {
+	f := make([]*Field, len(fields))
+
+	for i, field := range fields {
+		f[i] = NewFromAstField(field)
+	}
+
+	return f
+}
+
+// FieldName returns the name of the field.
+func (f *Field) FieldName() string {
+	return f.Names[0].Name
+}
+
+// FieldType returns the type of the field.
+func (f *Field) FieldType() string {
+	return f.Field.Type.(*ast.Ident).Name
 }

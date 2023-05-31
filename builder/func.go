@@ -15,8 +15,14 @@ func NewFunc(name string) *Func {
 				Params:  &ast.FieldList{},
 				Results: &ast.FieldList{},
 			},
+			Body: &ast.BlockStmt{},
 		},
 	}
+}
+
+// Args returns the arguments of the function as a slice of Field.
+func (f *Func) Args() []*Field {
+	return FieldsFromAstFields(f.Type.Params.List)
 }
 
 // AddArgs adds arguments to the function.
@@ -76,6 +82,15 @@ func (f *Func) AddComment(comment string) *Func {
 			},
 		},
 	}
+
+	return f
+}
+
+// AddReturnStatement adds a return statement to the function.
+func (f *Func) AddReturnStatement(exprs ...ast.Expr) *Func {
+	f.AddBody(&ast.ReturnStmt{
+		Results: exprs,
+	})
 
 	return f
 }
