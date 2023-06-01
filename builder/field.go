@@ -1,6 +1,9 @@
 package builder
 
-import "go/ast"
+import (
+	prb "github.com/jhump/protoreflect/desc/builder"
+	"go/ast"
+)
 
 type Field struct {
 	*ast.Field
@@ -92,5 +95,60 @@ func (f *Field) FieldName() string {
 
 // FieldType returns the type of the field.
 func (f *Field) FieldType() string {
-	return f.Field.Type.(*ast.Ident).Name
+	var name string
+	switch t := f.Field.Type.(type) {
+	case *ast.Ident:
+		name = t.Name
+	case *ast.StarExpr:
+		name = t.X.(*ast.Ident).Name
+	case *ast.SelectorExpr:
+		name = t.X.(*ast.Ident).Name + "." + t.Sel.Name
+	}
+
+	return name
+}
+
+// FieldIsPointer returns true if the field is a pointer.
+func (f *Field) FieldIsPointer() bool {
+	_, ok := f.Field.Type.(*ast.StarExpr)
+
+	return ok
+}
+
+// FieldIsSelector returns true if the field is a selector.
+func (f *Field) FieldIsSelector() bool {
+	_, ok := f.Field.Type.(*ast.SelectorExpr)
+
+	return ok
+}
+
+// DescType returns a prb.FieldType for the field type.
+func (f *Field) DescType() *prb.FieldType {
+	switch f.FieldType() {
+	case "int":
+		return prb.FieldTypeInt32()
+	case "int32":
+		return prb.FieldTypeInt32()
+	case "int64":
+		return prb.FieldTypeInt64()
+	case "uint":
+		return prb.FieldTypeUInt32()
+	case "uint32":
+		return prb.FieldTypeUInt32()
+	case "uint64":
+		return prb.FieldTypeUInt64()
+	case "float32":
+		return prb.FieldTypeFloat()
+	case "float64":
+		return prb.FieldTypeDouble()
+	case "bool":
+		return prb.FieldTypeBool()
+	case "string":
+		return prb.FieldTypeString()
+	case "[]byte":
+		return prb.FieldTypeBytes()
+	default:
+		msg := prb.NewMessage(f.FieldName())
+		return prb.FieldTypeMessage(msg)
+	}
 }

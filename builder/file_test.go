@@ -32,7 +32,13 @@ func TestBuilder(t *testing.T) {
 var src = `
 package test
 
-type Person struct {}
+type Person struct {
+	Name string
+}
+
+func (p *Person) GetName() string {
+	return p.Name
+}
 
 func main() {}
 `
@@ -50,4 +56,12 @@ func TestNewFromSource(t *testing.T) {
 			),
 	)
 	assert.NoError(t, f.Print(os.Stdout))
+}
+
+func TestStructFuncs(t *testing.T) {
+	f, err := NewFromSource(src)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(f.Structs()))
+	fns := f.StructFuncs("Person")
+	fmt.Printf("%+v\n", fns[0].Name)
 }

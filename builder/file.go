@@ -18,6 +18,16 @@ func NewFile(pkg string) *File {
 	}}
 }
 
+// NewFromFile creates a new file from the given file.
+func NewFromFile(filename string) (*File, error) {
+	f, err := parser.ParseFile(token.NewFileSet(), filename, nil, parser.ParseComments)
+	if err != nil {
+		return nil, err
+	}
+
+	return &File{File: f}, nil
+}
+
 // NewFromSource creates a new file from the given source.
 func NewFromSource(src string) (*File, error) {
 	f, err := parser.ParseFile(token.NewFileSet(), "", src, parser.ParseComments)
@@ -99,6 +109,21 @@ func (f *File) Func(name string) *Func {
 	}
 
 	return nil
+}
+
+// StructFuncs Funcs for the given struct.
+func (f *File) StructFuncs(name string) []*Func {
+	var funcs []*Func
+
+	for _, fn := range f.Funcs() {
+		if fn.Recv != nil {
+			if fn.Recv.List[0].Type.(*ast.StarExpr).X.(*ast.Ident).Name == name {
+				funcs = append(funcs, fn)
+			}
+		}
+	}
+
+	return funcs
 }
 
 // AddFunc adds a function to the file.

@@ -7,6 +7,7 @@ import (
 
 type Struct struct {
 	*ast.StructType
+	file *File
 
 	Name string
 }
@@ -62,6 +63,11 @@ func (s *Struct) RemoveField(name string) *Struct {
 	}
 
 	return s
+}
+
+// StructFields returns the fields of the struct.
+func (s *Struct) StructFields() []*Field {
+	return FieldsFromAstFields(s.StructType.Fields.List)
 }
 
 // ToSpec returns a *ast.TypeSpec for the struct.

@@ -105,3 +105,8 @@ func (f *Func) AddReceiver(receiver *Field) *Func {
 
 	return f
 }
+
+// Receiver returns the receiver of the function.
+func (f *Func) Receiver() *Field {
+	return NewFromAstField(f.Recv.List[0])
+}
