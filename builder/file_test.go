@@ -29,6 +29,27 @@ func TestBuilder(t *testing.T) {
 	assert.NoError(t, f.Print(os.Stdout))
 }
 
+func TestBuilderExample(t *testing.T) {
+	fn := NewFunc("hello").
+		AddArg(NewField("name", "string")).
+		AddResults(NewField("", "string"))
+
+	otherStruct := NewStruct("X").
+		AddStringField("Y").
+		AddField(NewPointerSelectorField("Z", "time", "Time"))
+
+	file := NewFile("test").AddStructs(
+		NewStruct("Person").
+			AddStringField("Name").
+			AddStructField("Address", otherStruct, "test"),
+		NewStruct("Address").
+			AddSelectorField("Date", "time", "Time"),
+		otherStruct,
+	).AddFunc(fn)
+
+	assert.NoError(t, file.Print(os.Stdout))
+}
+
 var src = `
 package test
 
