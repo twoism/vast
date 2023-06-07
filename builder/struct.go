@@ -1,6 +1,7 @@
 package builder
 
 import (
+	prb "github.com/jhump/protoreflect/desc/builder"
 	"go/ast"
 	"go/token"
 )
@@ -20,6 +21,20 @@ func NewStruct(name string) *Struct {
 			Fields: &ast.FieldList{},
 		},
 	}
+}
+
+// NewStructFromJSON creates a new struct from the given JSON.
+func NewStructFromJSON(name string, json map[string]interface{}) *Struct {
+	s := NewStruct(name)
+
+	for name, fieldType := range json {
+		switch fieldType.(type) {
+		case string:
+			s.AddStringField(name)
+		}
+	}
+
+	return s
 }
 
 // AddSelectorField adds a selector field to the struct.
@@ -89,4 +104,14 @@ func (s *Struct) ToDecl() *ast.GenDecl {
 // String returns the string representation of the struct.
 func (s *Struct) String() string {
 	return s.Name
+}
+
+// ToProtoBuilder returns a *prb.MessageBuilder for the struct.
+func (s *Struct) ToProtoBuilder() *prb.MessageBuilder {
+	mb := prb.NewMessage(s.Name)
+	for _, field := range s.StructFields() {
+		mb.AddField(prb.NewField(field.FieldName(), field.DescType()))
+	}
+
+	return mb
 }
