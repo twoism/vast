@@ -38,6 +38,10 @@ func NewFromSource(src string) (*File, error) {
 	return &File{File: f}, nil
 }
 
+func (f *File) PackageName() string {
+	return f.Name.Name
+}
+
 // AddStructs adds structs to the file.
 func (f *File) AddStructs(structs ...*Struct) *File {
 	for _, s := range structs {
@@ -159,11 +163,38 @@ func (f *File) Enums() []*Enum {
 	return enums
 }
 
+// Constants returns the constants in the file.
+func (f *File) Constants() []*Const {
+	var consts []*Const
+
+	for _, decl := range f.Decls {
+		if genDecl, ok := decl.(*ast.GenDecl); ok {
+			for _, spec := range genDecl.Specs {
+				if valueSpec, ok := spec.(*ast.ValueSpec); ok {
+					consts = append(consts, NewConst(valueSpec.Names[0].Name, valueSpec.Type.(*ast.Ident).Name))
+				}
+			}
+		}
+	}
+
+	return consts
+}
+
+// AddConst adds a constant to the file.
+func (f *File) AddConst(c *Const) *File {
+	f.Decls = append(f.Decls, c.ToDecl())
+
+	return f
+}
+
+// AddVar adds a variable to the file.
+func (f *File) AddVar(v *Var) *File {
+	f.Decls = append(f.Decls, v.ToDecl())
+
+	return f
+}
+
 // Print prints the file to the io.Writer.
 func (f *File) Print(w io.Writer) error {
 	return printer.Fprint(w, token.NewFileSet(), f.File)
-}
-
-func (f *File) PackageName() string {
-	return f.Name.Name
 }

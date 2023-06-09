@@ -1,6 +1,8 @@
 package builder
 
-import "go/ast"
+import (
+	"go/ast"
+)
 
 type Func struct {
 	*ast.FuncDecl
@@ -109,4 +111,14 @@ func (f *Func) AddReceiver(receiver *Field) *Func {
 // Receiver returns the receiver of the function.
 func (f *Func) Receiver() *Field {
 	return NewFromAstField(f.Recv.List[0])
+}
+
+// Results returns the results of the function as a slice of Field.
+func (f *Func) Results() []*Field {
+	return FieldsFromAstFields(f.Type.Results.List)
+}
+
+// String returns the string representation of the function.
+func (f *Func) String() string {
+	return f.Name.Name
 }
