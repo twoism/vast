@@ -73,7 +73,7 @@ func TestNewFromSource(t *testing.T) {
 	f.AddStruct(
 		NewStruct("Address").
 			AddField(
-				NewStructField("Person", f.Struct("Person"), f.PackageName()),
+				NewStructField("Person", f.PackageName()),
 			),
 	)
 	assert.NoError(t, f.Print(os.Stdout))

@@ -44,7 +44,7 @@ func (s *Struct) AddSelectorField(name, pkg, fieldType string) *Struct {
 
 // AddStructField adds a struct field to the struct.
 func (s *Struct) AddStructField(name string, str *Struct, pkg string) *Struct {
-	return s.AddField(NewStructField(name, str, pkg))
+	return s.AddField(NewStructField(name, pkg))
 }
 
 // AddStringField adds a string field to the struct.

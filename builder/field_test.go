@@ -19,7 +19,6 @@ func TestDescType(t *testing.T) {
 	f := NewField("i", "int")
 	assert.Equal(t, descriptorpb.FieldDescriptorProto_TYPE_INT32, f.DescType().GetType())
 
-	s := NewStruct("thing").AddFields(f)
-	f = NewStructField("thing", s, "test")
+	f = NewStructField("thing", "test")
 	assert.Equal(t, descriptorpb.FieldDescriptorProto_TYPE_MESSAGE, f.DescType().GetType())
 }
