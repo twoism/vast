@@ -7,6 +7,16 @@ import (
 	"testing"
 )
 
+func TestNewField(t *testing.T) {
+	f := NewField("i", "int")
+	assert.Equal(t, "i", f.Names[0].Name)
+	assert.Equal(t, "int", f.Type.(*ast.Ident).Name)
+
+	f2 := NewField("i", "int", IsPointer())
+	assert.Equal(t, "i", f2.Names[0].Name)
+	assert.Equal(t, "int", f2.Type.(*ast.StarExpr).X.(*ast.Ident).Name)
+}
+
 func TestNewSelectorField(t *testing.T) {
 	f := NewSelectorField("Date", "time", "Time")
 	assert.Equal(t, "Date", f.Names[0].Name)

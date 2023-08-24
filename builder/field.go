@@ -9,14 +9,30 @@ type Field struct {
 	*ast.Field
 }
 
+type FieldOpt func(*Field)
+
+func IsPointer() FieldOpt {
+	return func(f *Field) {
+		f.Field.Type = &ast.StarExpr{
+			X: f.Field.Type,
+		}
+	}
+}
+
 // NewField creates a new field with the given name and type.
-func NewField(name, fieldType string) *Field {
-	return &Field{
+func NewField(name string, fieldType string, opts ...FieldOpt) *Field {
+	f := &Field{
 		Field: &ast.Field{
 			Names: []*ast.Ident{ast.NewIdent(name)},
 			Type:  ast.NewIdent(fieldType),
 		},
 	}
+
+	for _, opt := range opts {
+		opt(f)
+	}
+
+	return f
 }
 
 // NewFromAstField creates a new field from an ast.Field.
