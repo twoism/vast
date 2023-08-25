@@ -1,21 +1,28 @@
 package builder
 
 import (
+	"bytes"
 	"go/ast"
 	"go/parser"
 	"go/printer"
 	"go/token"
+	"golang.org/x/tools/imports"
 	"io"
 )
 
 type File struct {
 	*ast.File
+
+	toImport map[string]struct{}
 }
 
 func NewFile(pkg string) *File {
-	return &File{File: &ast.File{
-		Name: ast.NewIdent(pkg),
-	}}
+	return &File{
+		toImport: make(map[string]struct{}),
+		File: &ast.File{
+			Name:    ast.NewIdent(pkg),
+			Imports: make([]*ast.ImportSpec, 0),
+		}}
 }
 
 // NewFromFile creates a new file from the given file.
@@ -53,6 +60,10 @@ func (f *File) AddStructs(structs ...*Struct) *File {
 
 // AddStruct adds a struct to the file.
 func (f *File) AddStruct(s *Struct) *File {
+	for imp, _ := range s.Imports {
+		f.AddImport(imp)
+	}
+
 	f.Decls = append(f.Decls, s.ToDecl())
 
 	return f
@@ -194,7 +205,33 @@ func (f *File) AddVar(v *Var) *File {
 	return f
 }
 
+// AddImport adds an import to the file.
+func (f *File) AddImport(imp *Import) *File {
+	if _, ok := f.toImport[imp.Path()]; ok {
+		return f
+	}
+
+	f.Decls = append(f.Decls, imp.ToDecl())
+	f.toImport[imp.Path()] = struct{}{}
+
+	return f
+}
+
 // Print prints the file to the io.Writer.
 func (f *File) Print(w io.Writer) error {
 	return printer.Fprint(w, token.NewFileSet(), f.File)
+}
+
+// PrintFormatted prints the file to the io.Writer with imports.Process formatting.
+func (f *File) PrintFormatted(w io.Writer) error {
+	var buf bytes.Buffer
+	if err := f.Print(&buf); err != nil {
+		return err
+	}
+
+	if _, err := imports.Process("gen/tmp.go", buf.Bytes(), nil); err != nil {
+		return err
+	}
+
+	return nil
 }

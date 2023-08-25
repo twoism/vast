@@ -7,14 +7,19 @@ import (
 )
 
 func TestStructFields(t *testing.T) {
-	s := NewStruct("S").
-		AddFields(
-			NewField("A", "string"),
-			NewField("B", "string"),
-		)
-	assert.Equal(t, 2, len(s.Fields.List))
-	s.RemoveField("A")
-	assert.Equal(t, 1, len(s.Fields.List))
+	t.Run("AddField-Primative", func(t *testing.T) {
+		s := NewStruct("S").
+			AddField(NewField("A", "string"))
+		assert.Equal(t, 1, len(s.Fields.List))
+		assert.Equal(t, 1, len(s.Imports))
+	})
+
+	//s := NewStruct("S").
+	//	AddFields(
+	//		NewField("A", "string"),
+	//		NewField("B", "time.Time"),
+	//		NewField("C", "github.com/foo/bar.Time"),
+	//	)
 }
 
 func TestToMessageBuilder(t *testing.T) {
@@ -27,7 +32,7 @@ func TestToMessageBuilder(t *testing.T) {
 		AddFields(
 			NewField("A", "string"),
 			NewField("B", "string"),
-		).AddStructField("O", o, "test")
+		).AddStructField("O", o)
 	m := s.ToProtoBuilder()
 	assert.Equal(t, "A", m.GetField("A").GetName())
 

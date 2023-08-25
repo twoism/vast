@@ -3,16 +3,23 @@ package builder
 import (
 	prb "github.com/jhump/protoreflect/desc/builder"
 	"go/ast"
+	"strings"
 )
 
 type Field struct {
 	*ast.Field
+
+	isPointer   bool
+	hasPackage  bool
+	packageName string
 }
 
 type FieldOpt func(*Field)
 
-func IsPointer() FieldOpt {
+func FieldIsPointerOpt() FieldOpt {
 	return func(f *Field) {
+		f.isPointer = true
+
 		f.Field.Type = &ast.StarExpr{
 			X: f.Field.Type,
 		}
@@ -20,37 +27,37 @@ func IsPointer() FieldOpt {
 }
 
 // NewField creates a new field with the given name and type.
-func NewField(name string, fieldType string, opts ...FieldOpt) *Field {
-	f := &Field{
+func NewField(name string, ftype string, opts ...FieldOpt) *Field {
+	pkg, fieldType, hasPkg := SplitPackage(ftype)
+
+	field := &Field{
 		Field: &ast.Field{
 			Names: []*ast.Ident{ast.NewIdent(name)},
-			Type:  ast.NewIdent(fieldType),
 		},
 	}
 
-	for _, opt := range opts {
-		opt(f)
+	if hasPkg {
+		field.hasPackage = true
+		field.packageName = pkg
+		field.Field.Type = &ast.SelectorExpr{
+			X:   ast.NewIdent(pkg),
+			Sel: ast.NewIdent(fieldType),
+		}
+	} else {
+		field.Field.Type = ast.NewIdent(fieldType)
 	}
 
-	return f
+	for _, opt := range opts {
+		opt(field)
+	}
+
+	return field
 }
 
 // NewFromAstField creates a new field from an ast.Field.
 func NewFromAstField(field *ast.Field) *Field {
 	return &Field{
 		Field: field,
-	}
-}
-
-// NewPointerField creates a new field with the given name and type.
-func NewPointerField(name, fieldType string) *Field {
-	return &Field{
-		Field: &ast.Field{
-			Names: []*ast.Ident{ast.NewIdent(name)},
-			Type: &ast.StarExpr{
-				X: ast.NewIdent(fieldType),
-			},
-		},
 	}
 }
 
@@ -104,8 +111,8 @@ func FieldsFromAstFields(fields []*ast.Field) []*Field {
 	return f
 }
 
-// FieldName returns the name of the field.
-func (f *Field) FieldName() string {
+// Name returns the name of the field.
+func (f *Field) Name() string {
 	return f.Names[0].Name
 }
 
@@ -116,7 +123,12 @@ func (f *Field) FieldType() string {
 	case *ast.Ident:
 		name = t.Name
 	case *ast.StarExpr:
-		name = t.X.(*ast.Ident).Name
+		switch xt := t.X.(type) {
+		case *ast.SelectorExpr:
+			name = xt.X.(*ast.Ident).Name + "." + xt.Sel.Name
+		case *ast.Ident:
+			name = xt.Name
+		}
 	case *ast.SelectorExpr:
 		name = t.X.(*ast.Ident).Name + "." + t.Sel.Name
 	}
@@ -124,18 +136,19 @@ func (f *Field) FieldType() string {
 	return name
 }
 
-// FieldIsPointer returns true if the field is a pointer.
-func (f *Field) FieldIsPointer() bool {
-	_, ok := f.Field.Type.(*ast.StarExpr)
-
-	return ok
+// IsPointer returns true if the field is a pointer.
+func (f *Field) IsPointer() bool {
+	return f.isPointer
 }
 
-// FieldIsSelector returns true if the field is a selector.
-func (f *Field) FieldIsSelector() bool {
-	_, ok := f.Field.Type.(*ast.SelectorExpr)
+// HasPackage returns true if the field is a selector.
+func (f *Field) HasPackage() bool {
+	return f.hasPackage
+}
 
-	return ok
+// PackageName returns the package name of the field.
+func (f *Field) PackageName() string {
+	return f.packageName
 }
 
 // DescType returns a prb.FieldType for the field type.
@@ -164,7 +177,16 @@ func (f *Field) DescType() *prb.FieldType {
 	case "[]byte":
 		return prb.FieldTypeBytes()
 	default:
-		msg := prb.NewMessage(f.FieldName())
+		msg := prb.NewMessage(f.Name())
 		return prb.FieldTypeMessage(msg)
 	}
+}
+
+func SplitPackage(name string) (pkg, fieldType string, hasPkg bool) {
+	parts := strings.Split(name, ".")
+	if len(parts) == 2 {
+		return parts[0], parts[1], true
+	}
+
+	return "", name, false
 }

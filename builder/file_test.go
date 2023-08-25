@@ -14,19 +14,30 @@ func TestBuilder(t *testing.T) {
 
 	other := NewStruct("X").
 		AddStringField("Y").
-		AddField(NewPointerSelectorField("Z", "time", "Time"))
+		AddField(NewField("Z", "time.Time", FieldIsPointerOpt()))
 
 	f := NewFile("test").AddStructs(
 		NewStruct("Person").
 			AddStringField("Name").
-			AddStructField("Address", other, "test"),
-		NewStruct("Address").
-			AddSelectorField("Date", "time", "Time"),
+			AddStructField("Address", other),
+		//NewStruct("Address").AddField("Date", "time.Time"),
 		other,
 	).AddFunc(fn)
 
 	fmt.Printf("%+v\n", f.Structs())
 	assert.NoError(t, f.Print(os.Stdout))
+}
+
+func TestBuilderExample2(t *testing.T) {
+	file := NewFile("test").AddStructs(
+		NewStruct("Person").
+			AddField(
+				NewField("Date", "time.Time",
+					FieldIsPointerOpt()),
+			),
+	)
+
+	assert.NoError(t, file.PrintFormatted(os.Stdout))
 }
 
 func TestBuilderExample(t *testing.T) {
@@ -40,14 +51,15 @@ func TestBuilderExample(t *testing.T) {
 
 	file := NewFile("test").AddStructs(
 		NewStruct("Person").
-			AddStringField("Name").
-			AddStructField("Address", otherStruct, "test"),
+			AddField(NewField("Name", "string", FieldIsPointerOpt())).
+			AddStructField("Address", otherStruct),
 		NewStruct("Address").
-			AddSelectorField("Date", "time", "Time"),
+			AddField(NewField("Date", "time.Time")),
 		otherStruct,
 	).AddFunc(fn)
 
-	assert.NoError(t, file.Print(os.Stdout))
+	assert.NoError(t, file.PrintFormatted(os.Stdout))
+	t.TempDir()
 }
 
 var src = `

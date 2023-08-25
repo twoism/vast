@@ -10,7 +10,8 @@ type Struct struct {
 	*ast.StructType
 	file *File
 
-	Name string
+	Name    string
+	Imports map[*Import]struct{}
 }
 
 // NewStruct creates a new struct with the given name.
@@ -20,6 +21,7 @@ func NewStruct(name string) *Struct {
 		StructType: &ast.StructType{
 			Fields: &ast.FieldList{},
 		},
+		Imports: make(map[*Import]struct{}),
 	}
 }
 
@@ -43,8 +45,8 @@ func (s *Struct) AddSelectorField(name, pkg, fieldType string) *Struct {
 }
 
 // AddStructField adds a struct field to the struct.
-func (s *Struct) AddStructField(name string, str *Struct, pkg string) *Struct {
-	return s.AddField(NewStructField(name, pkg))
+func (s *Struct) AddStructField(name string, str *Struct) *Struct {
+	return s.AddField(NewField(name, str.Name))
 }
 
 // AddStringField adds a string field to the struct.
@@ -54,6 +56,10 @@ func (s *Struct) AddStringField(name string) *Struct {
 
 // AddField adds a field to the struct.
 func (s *Struct) AddField(field *Field) *Struct {
+	if field.hasPackage {
+		s.AddImport(field.PackageName())
+	}
+
 	s.Fields.List = append(s.Fields.List, field.Field)
 
 	return s
@@ -85,6 +91,13 @@ func (s *Struct) StructFields() []*Field {
 	return FieldsFromAstFields(s.StructType.Fields.List)
 }
 
+// AddImport adds an import to the struct.
+func (s *Struct) AddImport(pkg string) *Struct {
+	s.Imports[NewImport(pkg)] = struct{}{}
+
+	return s
+}
+
 // ToSpec returns a *ast.TypeSpec for the struct.
 func (s *Struct) ToSpec() *ast.TypeSpec {
 	return &ast.TypeSpec{
@@ -110,7 +123,7 @@ func (s *Struct) String() string {
 func (s *Struct) ToProtoBuilder() *prb.MessageBuilder {
 	mb := prb.NewMessage(s.Name)
 	for _, field := range s.StructFields() {
-		mb.AddField(prb.NewField(field.FieldName(), field.DescType()))
+		mb.AddField(prb.NewField(field.Name(), field.DescType()))
 	}
 
 	return mb
