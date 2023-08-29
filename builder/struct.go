@@ -31,6 +31,7 @@ func NewStructFromJSON(name string, json map[string]interface{}) *Struct {
 
 	for name, fieldType := range json {
 		switch fieldType.(type) {
+		// TODO: JSON type map
 		case string:
 			s.AddStringField(name)
 		}
