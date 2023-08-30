@@ -211,7 +211,6 @@ func (f *File) AddImport(imp *Import) *File {
 		return f
 	}
 
-	f.Decls = append(f.Decls, imp.ToDecl())
 	f.toImport[imp.Path()] = struct{}{}
 
 	return f

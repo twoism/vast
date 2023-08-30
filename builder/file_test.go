@@ -47,7 +47,7 @@ func TestBuilderExample(t *testing.T) {
 
 	otherStruct := NewStruct("X").
 		AddStringField("Y").
-		AddField(NewPointerSelectorField("Z", "time", "Time"))
+		AddField(NewField("T", "time.Time", FieldIsPointerOpt()))
 
 	file := NewFile("test").AddStructs(
 		NewStruct("Person").

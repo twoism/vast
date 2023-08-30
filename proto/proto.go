@@ -13,7 +13,7 @@ func NewBuilderForFile(f *builder.File) *prb.FileBuilder {
 	for _, s := range f.Structs() {
 		msg := prb.NewMessage(s.Name)
 		for _, sf := range s.StructFields() {
-			field := prb.NewField(sf.FieldName(), FieldTypeForField(sf))
+			field := prb.NewField(sf.Name(), FieldTypeForField(sf))
 			msg = msg.AddField(field)
 		}
 		file = file.AddMessage(msg)
@@ -48,7 +48,7 @@ func FieldTypeForField(f *builder.Field) *prb.FieldType {
 	case "[]byte":
 		return prb.FieldTypeBytes()
 	default:
-		msg := prb.NewMessage(f.FieldName())
+		msg := prb.NewMessage(f.Name())
 		return prb.FieldTypeMessage(msg)
 	}
 }
